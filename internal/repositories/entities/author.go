@@ -7,6 +7,9 @@ import (
 )
 
 type Author struct {
-	ID          uuid.UUID `gorm:"type:uuid;primary_key"`
-	DateOfBirth time.Time `gorm:"type:timestampz"`
+	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
+	DateOfBirth time.Time `gorm:"type:date"`
+	FirstName   string    `gorm:"type:text"`
+	SecondName  string    `gorm:"type:text"`
+	Surname     string    `gorm:"type:text"`
 }

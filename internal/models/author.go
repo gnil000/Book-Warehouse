@@ -1,10 +1,16 @@
 package models
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type Author struct {
-	ID         uuid.UUID
-	FirstName  string
-	SecondName string
-	Surname    string
+	ID          uuid.UUID
+	DateOfBirth time.Time
+	FirstName   string
+	SecondName  string
+	Surname     string
+	FullName    string
 }

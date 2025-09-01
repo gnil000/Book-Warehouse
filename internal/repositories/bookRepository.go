@@ -3,6 +3,7 @@ package repositories
 import (
 	"fmt"
 	"gin_main/internal/repositories/entities"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -27,6 +28,7 @@ func NewBookRepository(database *gorm.DB) BookRepositoryInterface {
 }
 
 func (r *bookRepository) Create(book entities.Book) (entities.Book, error) {
+	book.Title = strings.ToTitle(book.Title)
 	if result := r.database.Create(&book); result.Error != nil {
 		return entities.Book{}, result.Error
 	}
@@ -42,7 +44,7 @@ func (r *bookRepository) Update(book entities.Book) error {
 
 func (r *bookRepository) FindById(id uuid.UUID) (entities.Book, error) {
 	var book entities.Book
-	if result := r.database.Find(&book, id); result != nil {
+	if result := r.database.Preload("author").Find(&book, id); result != nil {
 		return entities.Book{}, result.Error
 	}
 	return book, nil
@@ -50,19 +52,32 @@ func (r *bookRepository) FindById(id uuid.UUID) (entities.Book, error) {
 
 func (r *bookRepository) FindByParameters(title, author string, yearOfWriting, yearOfBirth *time.Time) ([]entities.Book, error) {
 	var books []entities.Book
+	query := r.database.Model(&entities.Book{}).Joins("join authors a on a.id = books.author_id")
 	if title != "" {
-		r.database.Where("title = ?", title)
+		query = query.Where("title ilike ?", title)
 	}
+	//NOTE: пока использую поиск в тупую с ограничением юзера, в будущем (Postgres full-text search)
 	if author != "" {
-		r.database.Where("author_id = (select id from author where full_name like ?)", author) //TODO: вернуться и решить как правильно искать автора разными способами
+		// ищем по ФИО полным или Фамилия инициалы или просто по Фамилии
+		words := strings.Split(author, " ")
+		if len(words) == 1 { // только фамилия
+			query = query.Where("a.surname ilike ?", words[0])
+		}
+		if len(words) == 3 { // фамилия имя отчество
+			query = query.Where("a.surname ilike ? and a.first_name ilike ? and a.second_name ilike ?)", words[0], "%"+words[1]+"%", "%"+words[2]+"%")
+		}
+		// if len(words) == 2 { // фамилия инициалы
+		// 	query = query.Where("author_id = (select id from author where surname ilike ?)", words[0])
+		// }
+		//query = query.Where("author_id = (select id from author where surname ilike ?)", author)
 	}
 	if yearOfWriting != nil {
-		r.database.Where("yearOfWriting = ?", *yearOfWriting)
+		query = query.Where("yearOfWriting = ?", *yearOfWriting)
 	}
 	if yearOfBirth != nil {
-		r.database.Where("yearOfBirth = ?", *yearOfBirth)
+		query = query.Where("yearOfBirth = ?", *yearOfBirth)
 	}
-	if results := r.database.Find(&books); results != nil {
+	if results := query.Preload("Author").Find(&books); results != nil {
 		return nil, results.Error
 	}
 	return books, nil
@@ -70,7 +85,7 @@ func (r *bookRepository) FindByParameters(title, author string, yearOfWriting, y
 
 func (r *bookRepository) GetAll() ([]entities.Book, error) {
 	var books []entities.Book
-	if results := r.database.Find(&books); results.Error != nil {
+	if results := r.database.Preload("author").Find(&books); results.Error != nil {
 		return nil, results.Error
 	}
 	return books, nil
