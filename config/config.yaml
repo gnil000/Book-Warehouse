@@ -1,0 +1,10 @@
+app: gin_main
+stack: api
+server:
+  port: 8080
+  read_header_timeout: 5s
+  read_timeout: 15s
+  write_timeout: 15s
+  idle_timeout: 15s
+database:
+  bookDB: connectionString
