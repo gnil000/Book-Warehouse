@@ -1,12 +1,14 @@
 package services
 
 import (
+	"fmt"
 	"gin_main/pkg/hash"
 	"gin_main/src/jwt"
 	"gin_main/src/models"
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
 )
 
 type AuthServiceInterface interface {
@@ -18,19 +20,23 @@ type AuthServiceInterface interface {
 type authService struct {
 	jwtHelper   *jwt.JWTHelper
 	userService UserServiceInterface
+	log         zerolog.Logger
 }
 
-func NewAuthService(jwtHelper *jwt.JWTHelper, userService UserServiceInterface) AuthServiceInterface {
-	return &authService{jwtHelper: jwtHelper, userService: userService}
+func NewAuthService(jwtHelper *jwt.JWTHelper, userService UserServiceInterface, log zerolog.Logger) AuthServiceInterface {
+	return &authService{jwtHelper: jwtHelper, userService: userService, log: log}
 }
 
 func (s *authService) ValidateBearerToken(token string) (models.User, error) {
 	var err error
 	claims, err := s.jwtHelper.ValidateJWT(token)
+	s.log.Err(err)
 	if err != nil {
 		return models.User{}, err
 	}
+	s.log.Info().Msg(fmt.Sprintf("объект claims %v", *claims))
 	userId, err := uuid.Parse(claims.Subject)
+	s.log.Err(err)
 	if err != nil {
 		return models.User{}, err
 	}

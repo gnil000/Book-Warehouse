@@ -10,6 +10,6 @@ type User struct {
 }
 
 type RegistrationUserRequest struct {
-	Login    string `json:"login" binding:"required,min:5"`
-	Password string `json:"password" binding:"required,min:8"`
+	Login    string `json:"login" binding:"required,min=5"`
+	Password string `json:"password" binding:"required,min=8"`
 }

@@ -20,8 +20,9 @@ func LogContextMiddleware(log zerolog.Logger) gin.HandlerFunc {
 	}
 }
 
-func BearerAuthMiddleware(authService services.AuthServiceInterface) gin.HandlerFunc {
+func BearerAuthMiddleware(authService services.AuthServiceInterface, log zerolog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		log.Info().Msg("начат процесс аутентификации bearer")
 		headerValue := c.Request.Header.Get("Authorization")
 		if !strings.HasPrefix(headerValue, "Bearer ") {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "authorization header required"})
@@ -34,6 +35,7 @@ func BearerAuthMiddleware(authService services.AuthServiceInterface) gin.Handler
 		}
 		token := parts[1]
 		user, err := authService.ValidateBearerToken(token)
+		log.Err(err).Msg("Ошибка валидации токена")
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
 			return

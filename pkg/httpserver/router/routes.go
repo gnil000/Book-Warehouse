@@ -5,6 +5,7 @@ import (
 	"gin_main/src/services"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 )
 
 type HandlerInterface interface {
@@ -12,15 +13,15 @@ type HandlerInterface interface {
 }
 
 func RegisterPublicEndpoints(router *gin.Engine, handlers ...HandlerInterface) {
-	api := router.Group("/api")
+	api := router.Group("/")
 	for _, handler := range handlers {
 		handler.RegisterRoutes(api)
 	}
 }
 
-func RegisterProtectedEndpoints(router *gin.Engine, authService services.AuthServiceInterface, handlers ...HandlerInterface) {
-	protected := router.Group("/api")
-	protected.Use(middlewares.BearerAuthMiddleware(authService))
+func RegisterProtectedEndpoints(router *gin.Engine, authService services.AuthServiceInterface, log zerolog.Logger, handlers ...HandlerInterface) {
+	protected := router.Group("/")
+	protected.Use(middlewares.BearerAuthMiddleware(authService, log))
 	for _, handler := range handlers {
 		handler.RegisterRoutes(protected)
 	}
