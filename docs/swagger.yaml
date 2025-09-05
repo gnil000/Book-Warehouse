@@ -1,0 +1,597 @@
+definitions:
+  models.Author:
+    properties:
+      author_id:
+        type: string
+      birth:
+        type: string
+      first_name:
+        type: string
+      second_name:
+        type: string
+      surname:
+        type: string
+    required:
+    - author_id
+    - birth
+    - first_name
+    - second_name
+    - surname
+    type: object
+  models.Book:
+    properties:
+      author:
+        $ref: '#/definitions/models.Author'
+      book_id:
+        type: string
+      quantity:
+        type: integer
+      title:
+        maxLength: 500
+        minLength: 1
+        type: string
+      year:
+        type: string
+    required:
+    - author
+    - book_id
+    - quantity
+    - title
+    - year
+    type: object
+  models.ChangeBookQuantityRequest:
+    properties:
+      bookId:
+        type: string
+      quantity:
+        type: integer
+    required:
+    - bookId
+    - quantity
+    type: object
+  models.ChangeBookQuantityResponse:
+    properties:
+      quantity:
+        type: integer
+    required:
+    - quantity
+    type: object
+  models.CreateAuthorRequest:
+    properties:
+      birth:
+        type: string
+      first_name:
+        type: string
+      second_name:
+        type: string
+      surname:
+        type: string
+    required:
+    - birth
+    - first_name
+    - second_name
+    - surname
+    type: object
+  models.CreateAuthorResponse:
+    properties:
+      author_id:
+        type: string
+    required:
+    - author_id
+    type: object
+  models.CreateBookRequest:
+    properties:
+      author:
+        $ref: '#/definitions/models.Author'
+      title:
+        maxLength: 500
+        minLength: 1
+        type: string
+      year:
+        type: string
+    required:
+    - author
+    - title
+    - year
+    type: object
+  models.CreateBookResponse:
+    properties:
+      bookId:
+        type: string
+    required:
+    - bookId
+    type: object
+  models.RegistrationUserRequest:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    required:
+    - login
+    - password
+    type: object
+  models.UpdateAuthorRequest:
+    properties:
+      author_id:
+        type: string
+      birth:
+        type: string
+      first_name:
+        type: string
+      second_name:
+        type: string
+      surname:
+        type: string
+    required:
+    - author_id
+    type: object
+  models.UpdateBookRequest:
+    properties:
+      author:
+        $ref: '#/definitions/models.Author'
+      book_id:
+        type: string
+      title:
+        maxLength: 500
+        minLength: 1
+        type: string
+      year:
+        type: string
+    required:
+    - author
+    - book_id
+    - title
+    - year
+    type: object
+  models.User:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /authentication/login:
+    post:
+      consumes:
+      - application/json
+      description: Вход пользователя в систему по логину и паролю. Возвращает jwt
+        токен
+      parameters:
+      - description: Данные для входа пользователя
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: JWT токен
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Вход в систему
+      tags:
+      - authentication
+  /authentication/registration:
+    post:
+      consumes:
+      - application/json
+      description: Регистрирует пользователя в системе
+      parameters:
+      - description: Данные для регистрации пользователя
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegistrationUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Регистрация пользователя
+      tags:
+      - authentication
+  /authors:
+    post:
+      consumes:
+      - application/json
+      description: Добавляет нового автора в базу данных
+      parameters:
+      - description: Данные для создания автора
+        in: body
+        name: author
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateAuthorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CreateAuthorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать автора
+      tags:
+      - authors
+    put:
+      consumes:
+      - application/json
+      description: Обновляет информацию об авторе в базе данных
+      parameters:
+      - description: Данные для обновления автора
+        in: body
+        name: author
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateAuthorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить автора
+      tags:
+      - authors
+  /authors/{id}:
+    get:
+      description: Возвращает информацию об авторе по его UUID
+      parameters:
+      - description: ID автора (UUID)
+        in: path
+        name: author_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Author'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Найти автора по ID
+      tags:
+      - authors
+  /authors/search/{surname}:
+    get:
+      description: Возвращает список авторов, у которых фамилия соответствует запросу
+      parameters:
+      - description: Фамилия автора
+        in: path
+        name: surname
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Author'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Найти автора по фамилии
+      tags:
+      - authors
+  /books:
+    get:
+      description: Возвращает список всех книг в хранилище
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Book'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Получить все книги
+      tags:
+      - books
+    post:
+      consumes:
+      - application/json
+      description: Создаёт объект описания книги и сохраняет в хранилище
+      parameters:
+      - description: Данные для создания книги
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateBookRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CreateBookResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Создать книгу
+      tags:
+      - books
+    put:
+      consumes:
+      - application/json
+      description: Обновляет описание книги и сохраняет в хранилище
+      parameters:
+      - description: Данные для обновления книги
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateBookRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Обновить книгу
+      tags:
+      - books
+  /books/{book_id}:
+    get:
+      description: Ищет книгу по id в хранилище
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Book'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Поиск книги по id
+      tags:
+      - books
+  /books/count:
+    put:
+      description: Меняет количество копий конкретной книги в хранилище
+      parameters:
+      - description: Id книги и количество для изменения (может быть больше или меньше
+          нуля)
+        in: body
+        name: quantity
+        required: true
+        schema:
+          $ref: '#/definitions/models.ChangeBookQuantityRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ChangeBookQuantityResponse'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Изменить количество
+      tags:
+      - books
+  /books/search:
+    get:
+      description: Ищет книгу по переданным в query параметрам
+      parameters:
+      - description: Название книги
+        in: query
+        name: title
+        type: string
+      - description: Имя автора (ФИО или Фамилия)
+        in: query
+        name: author
+        type: string
+      - description: Год написания книги (формат YYYY-MM-DD)
+        in: query
+        name: yearOfWriting
+        type: string
+      - description: Год рождения автора (формат YYYY-MM-DD)
+        in: query
+        name: yearOfBirth
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Book'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Поиск книги по параметрам
+      tags:
+      - books
+  /users/{login}:
+    get:
+      description: Возвращает информацию о пользователе по его логину
+      parameters:
+      - description: ID пользователя (UUID)
+        in: path
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Найти пользователя по логину
+      tags:
+      - users
+swagger: "2.0"

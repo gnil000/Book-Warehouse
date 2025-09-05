@@ -64,6 +64,7 @@ func main() {
 		})
 	})
 	engine.POST("/try", SomeHandler)
+	server.AddSwagger()
 	server.Serve()
 }
 

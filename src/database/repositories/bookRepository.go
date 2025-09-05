@@ -1,17 +1,19 @@
 package repositories
 
 import (
+	"errors"
 	"fmt"
-	"gin_main/internal/repositories/entities"
+	"gin_main/src/database/entities"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 )
 
 type BookRepositoryInterface interface {
-	Create(book entities.Book) (entities.Book, error)                                                      // создаёт книгу и возвращает ID или созданный объект книги
+	Create(book *entities.Book) error                                                                      // создаёт книгу и возвращает ID или созданный объект книги
 	Update(book entities.Book) error                                                                       // изменяет конкретную книгу
 	FindById(id uuid.UUID) (entities.Book, error)                                                          // найдёт книгу по конкретному id
 	FindByParameters(title, author string, yearOfWriting, yearOfBirth *time.Time) ([]entities.Book, error) // найдёт по параметрам (автор, название, год) | мне могут передать ФИО полностью, ФИО с инициалами, только фамилию или год рождения или год написания
@@ -27,24 +29,35 @@ func NewBookRepository(database *gorm.DB) BookRepositoryInterface {
 	return &bookRepository{database: database}
 }
 
-func (r *bookRepository) Create(book entities.Book) (entities.Book, error) {
+func (r *bookRepository) Create(book *entities.Book) error {
 	book.Title = strings.ToTitle(book.Title)
 	if result := r.database.Create(&book); result.Error != nil {
-		return entities.Book{}, result.Error
+		var pgErr *pgconn.PgError
+		if errors.As(result.Error, &pgErr) {
+			if pgErr.Code == "23505" {
+				return errors.New("book already exists")
+			}
+		}
+		return result.Error
 	}
-	return book, nil
+	return nil
 }
 
 func (r *bookRepository) Update(book entities.Book) error {
-	if result := r.database.Updates(&book); result.Error != nil {
+	book.Title = strings.ToTitle(book.Title)
+	var result *gorm.DB
+	if result = r.database.Updates(&book); result.Error != nil {
 		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
 	}
 	return nil
 }
 
 func (r *bookRepository) FindById(id uuid.UUID) (entities.Book, error) {
 	var book entities.Book
-	if result := r.database.Preload("author").Find(&book, id); result != nil {
+	if result := r.database.Preload("author").First(&book, id); result != nil {
 		return entities.Book{}, result.Error
 	}
 	return book, nil

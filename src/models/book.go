@@ -7,14 +7,21 @@ import (
 )
 
 type Book struct {
-	ID            uuid.UUID `json:"bookId" binding:"required"`
+	ID            uuid.UUID `json:"book_id" binding:"required"`
 	DateOfWriting time.Time `json:"year" binding:"required"`
 	Title         string    `json:"title" binding:"required,min=1,max=500"`
 	Author        Author    `json:"author" binding:"required"`
 	Quantity      int       `json:"quantity" binding:"required"`
 }
 
-type CreateOrUpdateBookRequest struct {
+type CreateBookRequest struct {
+	DateOfWriting time.Time `json:"year" binding:"required"`
+	Title         string    `json:"title" binding:"required,min=1,max=500"`
+	Author        Author    `json:"author" binding:"required"`
+}
+
+type UpdateBookRequest struct {
+	ID            uuid.UUID `json:"book_id" binding:"required"`
 	DateOfWriting time.Time `json:"year" binding:"required"`
 	Title         string    `json:"title" binding:"required,min=1,max=500"`
 	Author        Author    `json:"author" binding:"required"`

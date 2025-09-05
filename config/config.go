@@ -20,6 +20,12 @@ type Config struct {
 	Stack    string         `yaml:"stack"`
 	Server   serverConfig   `yaml:"server"`
 	Database databaseConfig `yaml:"database"`
+	JWT      jwtConfig      `yaml:"jwt"`
+}
+
+type jwtConfig struct {
+	SecretKey string        `yaml:"secret_key"`
+	TTL       time.Duration `yaml:"ttl"`
 }
 
 type serverConfig struct {

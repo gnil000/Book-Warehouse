@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gin_main/config"
+	"gin_main/pkg/logger"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,16 +14,22 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
+
+	_ "gin_main/docs"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Server struct {
-	logger *zerolog.Logger
+	logger zerolog.Logger
 	router *gin.Engine
 	config *config.Config
 }
 
-func NewServer(logger *zerolog.Logger, router *gin.Engine, config *config.Config) *Server {
-	return &Server{logger: logger, router: router, config: config}
+func NewServer(log zerolog.Logger, router *gin.Engine, config *config.Config) *Server {
+	log = logger.WithModule(log, "server")
+	return &Server{logger: log, router: router, config: config}
 }
 
 func (s *Server) Serve() {
@@ -55,4 +62,17 @@ func (s *Server) Serve() {
 	<-ctx.Done()
 	s.logger.Info().Msg("Server shutdown timeout of 5 seconds")
 	s.logger.Info().Msg("Server exiting")
+}
+
+func (s *Server) AddMiddleware(middleware gin.HandlerFunc) {
+	s.router.Use(middleware)
+}
+
+func (s *Server) GetLogger() zerolog.Logger {
+	return s.logger
+}
+
+func (s *Server) AddSwagger() {
+	url := ginSwagger.URL(s.router.BasePath())
+	s.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
 }

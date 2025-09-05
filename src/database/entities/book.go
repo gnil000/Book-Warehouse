@@ -12,5 +12,5 @@ type Book struct {
 	Title         string    `gorm:"type:text"`
 	AuthorID      uuid.UUID `gorm:"type:uuid"`
 	Quantity      int       `gorm:"type:int"`
-	Author        Author
+	Author        Author    `gorm:"foreignKey:AuthorID;references:ID"`
 }
