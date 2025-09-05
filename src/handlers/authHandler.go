@@ -35,8 +35,8 @@ func (h *authHandler) RegisterRoutes(router *gin.RouterGroup) {
 // @Produce      json
 // @Param        user  body      models.RegistrationUserRequest  true  "Данные для регистрации пользователя"
 // @Success      200
-// @Failure      400     {object}  map[string]string
-// @Failure      500     {object}  map[string]string
+// @Failure      400     {object}  models.ErrorResponse
+// @Failure      500     {object}  models.ErrorResponse
 // @Router       /authentication/registration [post]
 func (h *authHandler) Registration(ctx *gin.Context) {
 	var user models.RegistrationUserRequest
@@ -58,8 +58,8 @@ func (h *authHandler) Registration(ctx *gin.Context) {
 // @Produce      json
 // @Param        user  body      models.User  true  "Данные для входа пользователя"
 // @Success      200 {string} string "JWT токен"
-// @Failure      400     {object}  map[string]string
-// @Failure      500     {object}  map[string]string
+// @Failure      400     {object}  models.ErrorResponse
+// @Failure      500     {object}  models.ErrorResponse
 // @Router       /authentication/login [post]
 func (h *authHandler) Login(ctx *gin.Context) {
 	var user models.User

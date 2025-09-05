@@ -33,6 +33,16 @@ func (h *authorHandler) RegisterRoutes(router *gin.RouterGroup) {
 		PUT("/authors", h.UpdateAuthor)
 }
 
+// @Summary      Создать автора
+// @Description  Добавляет нового автора в базу данных
+// @Tags         authors
+// @Accept       json
+// @Produce      json
+// @Param        author  body      models.CreateAuthorRequest  true  "Данные для создания автора"
+// @Success      200     {object}  models.CreateAuthorResponse
+// @Failure      400     {object}  models.ErrorResponse
+// @Failure      500     {object}  models.ErrorResponse
+// @Router       /authors [post]
 func (h *authorHandler) CreateAuthor(ctx *gin.Context) {
 	var createAuthorRequest models.CreateAuthorRequest
 	if err := ctx.ShouldBindJSON(&createAuthorRequest); err != nil {
@@ -47,6 +57,16 @@ func (h *authorHandler) CreateAuthor(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, createAuthorResponse)
 }
 
+// @Summary      Найти автора по ID
+// @Description  Возвращает информацию об авторе по его UUID
+// @Tags         authors
+// @Produce      json
+// @Param        author_id   path      string  true  "ID автора (UUID)"
+// @Success      200  {object}  models.Author
+// @Failure      400  {object}  models.ErrorResponse
+// @Failure      404  {object}  models.ErrorResponse
+// @Failure      500  {object}  models.ErrorResponse
+// @Router       /authors/{id} [get]
 func (h *authorHandler) FindAuthorById(ctx *gin.Context) {
 	var err error
 	id, err := uuid.Parse(ctx.Param("id"))
@@ -62,6 +82,15 @@ func (h *authorHandler) FindAuthorById(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, author)
 }
 
+// @Summary      Найти автора по фамилии
+// @Description  Возвращает список авторов, у которых фамилия соответствует запросу
+// @Tags         authors
+// @Produce      json
+// @Param        surname  path      string  true  "Фамилия автора"
+// @Success      200      {array}   models.Author
+// @Failure      400      {object}  models.ErrorResponse
+// @Failure      500      {object}  models.ErrorResponse
+// @Router       /authors/search/{surname} [get]
 func (h *authorHandler) FindAuthorBySurname(ctx *gin.Context) {
 	surname := ctx.Param("surname")
 	// if surname == "" {
@@ -76,6 +105,17 @@ func (h *authorHandler) FindAuthorBySurname(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, authors)
 }
 
+// @Summary      Обновить автора
+// @Description  Обновляет информацию об авторе в базе данных
+// @Tags         authors
+// @Accept       json
+// @Produce      json
+// @Param        author  body      models.UpdateAuthorRequest  true  "Данные для обновления автора"
+// @Success      200
+// @Failure      400     {object}  models.ErrorResponse
+// @Failure      404     {object}  models.ErrorResponse
+// @Failure      500     {object}  models.ErrorResponse
+// @Router       /authors [put]
 func (h *authorHandler) UpdateAuthor(ctx *gin.Context) {
 	var updateAuthorRequest models.UpdateAuthorRequest
 	if err := ctx.ShouldBindJSON(&updateAuthorRequest); err != nil {
