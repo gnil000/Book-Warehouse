@@ -7,33 +7,56 @@ import (
 	"net/http"
 
 	"gin_main/config"
-	"gin_main/internal/handlers"
-	"gin_main/internal/repositories"
-	"gin_main/internal/services"
 	"gin_main/pkg/database"
 	"gin_main/pkg/httpserver"
+	"gin_main/pkg/httpserver/middlewares"
 	"gin_main/pkg/httpserver/router"
+	"gin_main/pkg/logger"
+	"gin_main/src/database/migrations"
+	"gin_main/src/database/repositories"
+	"gin_main/src/handlers"
+	"gin_main/src/jwt"
+	"gin_main/src/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	config := config.NewConfig()
+	log := logger.NewLogger(zerolog.InfoLevel)
+
+	migrations.Migrate(config, log)
 
 	engine := gin.Default()
-
-	server := httpserver.NewServer(&log.Logger, engine, config)
+	server := httpserver.NewServer(log, engine, config)
 
 	db := database.NewDatabaseConnection(config)
 	bookRepo := repositories.NewBookRepository(db)
 	bookService := services.NewBookService(bookRepo)
 	bookHandler := handlers.NewBookHandler(bookService)
 
-	router.RegisterPublicEndpoints(engine, bookHandler)
+	authorRepo := repositories.NewAuthorRepository(db)
+	authorService := services.NewAuthorService(authorRepo)
+	authorHandler := handlers.NewAuthorHandler(authorService)
+
+	userRepo := repositories.NewUserRepository()
+	userService := services.NewUserService(userRepo)
+	userHandler := handlers.NewUserHandler(userService)
+
+	jwtHelper := jwt.NewJWTHelper(config)
+	authService := services.NewAuthService(jwtHelper, userService)
+	authHandler := handlers.NewAuthHandler(authService)
+
+	server.AddMiddleware(middlewares.LogContextMiddleware(server.GetLogger()))
+	//server.AddMiddleware(middlewares.BearerAuthMiddleware(authService))
+
+	router.RegisterPublicEndpoints(engine, authHandler)
+	router.RegisterProtectedEndpoints(engine, authService, bookHandler)
+	router.RegisterProtectedEndpoints(engine, authService, authorHandler)
+	router.RegisterProtectedEndpoints(engine, authService, userHandler)
 
 	engine.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
