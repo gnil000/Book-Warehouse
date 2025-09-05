@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"gin_main/config"
-	"gin_main/pkg/database"
 	"gin_main/pkg/httpserver"
 	"gin_main/pkg/httpserver/middlewares"
 	"gin_main/pkg/httpserver/router"
@@ -33,30 +32,30 @@ func main() {
 	engine := gin.Default()
 	server := httpserver.NewServer(log, engine, config)
 
-	db := database.NewDatabaseConnection(config)
-	bookRepo := repositories.NewBookRepository(db)
-	bookService := services.NewBookService(bookRepo)
-	bookHandler := handlers.NewBookHandler(bookService)
+	//	db := database.NewDatabaseConnection(config)
+	//	bookRepo := repositories.NewBookRepository(db)
+	//	bookService := services.NewBookService(bookRepo)
+	//	bookHandler := handlers.NewBookHandler(bookService)
 
-	authorRepo := repositories.NewAuthorRepository(db)
-	authorService := services.NewAuthorService(authorRepo)
-	authorHandler := handlers.NewAuthorHandler(authorService)
+	//	authorRepo := repositories.NewAuthorRepository(db)
+	//	authorService := services.NewAuthorService(authorRepo)
+	//authorHandler := handlers.NewAuthorHandler(authorService)
 
 	userRepo := repositories.NewUserRepository()
 	userService := services.NewUserService(userRepo)
-	userHandler := handlers.NewUserHandler(userService)
+	//userHandler := handlers.NewUserHandler(userService)
 
-	jwtHelper := jwt.NewJWTHelper(config)
-	authService := services.NewAuthService(jwtHelper, userService)
+	jwtHelper := jwt.NewJWTHelper(config, log)
+	authService := services.NewAuthService(jwtHelper, userService, log)
 	authHandler := handlers.NewAuthHandler(authService)
 
 	server.AddMiddleware(middlewares.LogContextMiddleware(server.GetLogger()))
 	//server.AddMiddleware(middlewares.BearerAuthMiddleware(authService))
 
 	router.RegisterPublicEndpoints(engine, authHandler)
-	router.RegisterProtectedEndpoints(engine, authService, bookHandler)
-	router.RegisterProtectedEndpoints(engine, authService, authorHandler)
-	router.RegisterProtectedEndpoints(engine, authService, userHandler)
+	// router.RegisterProtectedEndpoints(engine, authService, log, bookHandler)
+	// router.RegisterProtectedEndpoints(engine, authService, log, authorHandler)
+	// router.RegisterProtectedEndpoints(engine, authService, log, userHandler)
 
 	engine.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
