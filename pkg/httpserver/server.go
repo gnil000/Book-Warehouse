@@ -73,6 +73,5 @@ func (s *Server) GetLogger() zerolog.Logger {
 }
 
 func (s *Server) AddSwagger() {
-	url := ginSwagger.URL(s.router.BasePath())
-	s.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, url))
+	s.router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }
